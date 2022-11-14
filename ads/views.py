@@ -77,7 +77,7 @@ class AdsDetailView(DetailView):
 @method_decorator(csrf_exempt, name='dispatch')
 class AdsCreateView(CreateView):
     model = Ads
-    fields = ['name', 'author', 'price', 'description', 'address', 'is_published']
+    fields = ['name', 'author', 'price', 'description',  'is_published']
 
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
@@ -87,7 +87,6 @@ class AdsCreateView(CreateView):
             author=data['author'],
             price=data['price'],
             description=data['description'],
-            address=data['address'],
             is_published=data['is_published'],
             logo=data['logo'],
             category=['category']
@@ -98,7 +97,7 @@ class AdsCreateView(CreateView):
 @method_decorator(csrf_exempt, name='dispatch')
 class AdsUpdateView(UpdateView):
     model = Ads
-    fields = ['name', 'price', 'description', 'address', 'is_published']
+    fields = ['name', 'price', 'description',  'is_published']
     def post(self, request, *args, **kwargs):
         super().post(request, *args, **kwargs)
         data = json.loads(request.body)
@@ -106,7 +105,6 @@ class AdsUpdateView(UpdateView):
         self.object.author = data['author']
         self.object.price = data['price']
         self.object.description = data['description']
-        self.object.address = data['address']
         self.object.is_published = data['is_published']
         self.object.logo = data['logo'],
         self.object.category = data['category']
@@ -118,7 +116,6 @@ class AdsUpdateView(UpdateView):
             'author': self.object.author,
             'price': self.object.price,
             'description': self.object.description,
-            'address': self.object.address,
             'is_published': self.object.is_published,
             'logo': self.object.logo,
             'category': self.object.category
@@ -137,7 +134,7 @@ class AdsDeleteView(DeleteView):
 @method_decorator(csrf_exempt, name='dispatch')
 class AdsAddImage(UpdateView):
     model = Ads
-    fields = ['name', 'author', 'price', 'description', 'address', 'is_published', 'logo', 'category']
+    fields = ['name', 'author', 'price', 'description', 'is_published', 'logo', 'category']
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -148,7 +145,6 @@ class AdsAddImage(UpdateView):
             'author': self.object.author,
             'price': self.object.price,
             'description': self.object.description,
-            'address': self.object.address,
             'is_published': self.object.is_published,
             'logo': self.object.logo.url if self.object.logo else None,
             'category': self.object.category
@@ -260,30 +256,21 @@ class UsersDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         #try:
-            ad = self.get_object()
-            paginator = Paginator(ad, settings.TOTAL_ON_PAGE)
-            page_number = request.GET.get('page')
-            page_object = paginator.get_page(page_number)
+            user = Users.objects.annotate(total_ads=Count('ads', filter=Q(ads__is_published=True)))
             list_data = []
             list_data.append({
-                'Id': ad.id,
-                'first_name': ad.first_name,
-                'last_name': ad.last_name,
-                'username': ad.username,
-                'password': ad.password,
-                'role': ad.role,
-                'age': ad.age,
-                'location': ad.location.name,
-                'total_ads': ad.total_ads
+                'Id': user.id,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'username': user.username,
+                'password': user.password,
+                'role': user.role,
+                'age': user.age,
+                'location': user.location.name,
+              #  'total_ads': user.total_ads
             })
 
-            response = {
-                'items': list_data,
-                'total': paginator.count,
-                'num_page': paginator.num_pages
-            }
-
-            return JsonResponse(response, safe=False)
+            return JsonResponse(list_data, safe=False)
 
         #except:
             return JsonResponse({'error': 'not found'}, status=404)
