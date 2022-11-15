@@ -255,25 +255,23 @@ class UsersDetailView(DetailView):
     model = Users
 
     def get(self, request, *args, **kwargs):
-        #try:
-            user = Users.objects.annotate(total_ads=Count('ads', filter=Q(ads__is_published=True)))
-            list_data = []
-            list_data.append({
-                'Id': user.id,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'username': user.username,
-                'password': user.password,
-                'role': user.role,
-                'age': user.age,
-                'location': user.location.name,
-              #  'total_ads': user.total_ads
-            })
+        super().get(request, *args, **kwargs)
+        self.object = Users.objects.prefetch_related('location').annotate(total_ads=Count('ads', filter=Q(ads__is_published=True))).get(pk=kwargs['pk'])
+        list_data = []
+        list_data.append({
+            'Id': self.object.id,
+            'first_name': self.object.first_name,
+            'last_name': self.object.last_name,
+            'username': self.object.username,
+            'password': self.object.password,
+            'role': self.object.role,
+            'age': self.object.age,
+            'location': list(map(str, self.object.location.all())),
+            'total_ads': self.object.total_ads
+        })
 
-            return JsonResponse(list_data, safe=False)
+        return JsonResponse(list_data, safe=False)
 
-        #except:
-            return JsonResponse({'error': 'not found'}, status=404)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
