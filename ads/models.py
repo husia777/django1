@@ -3,9 +3,9 @@ from django.db import models
 
 
 class Locations(models.Model):
-    name = models.TextField()
-    lat = models.FloatField()
-    lng = models.FloatField()
+    name = models.CharField(max_length=255)
+    lat = models.FloatField(max_length=255, default=0)
+    lng = models.FloatField(max_length=255,default=0)
 
     class Meta:
         verbose_name = 'Адрес'
@@ -19,7 +19,7 @@ class Locations(models.Model):
 
 
 class Category(models.Model):
-    name = models.TextField()
+    name = models.CharField(max_length=100)
 
     class Meta:
         verbose_name = 'Категория'
@@ -31,10 +31,10 @@ class Category(models.Model):
 
 class Users(models.Model):
     first_name = models.CharField(max_length=255)
-    last_name = models.TextField(null=True)
-    username = models.TextField()
-    password = models.TextField()
-    role = models.TextField()
+    last_name = models.CharField(max_length=100, null=True)
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=20)
+    role = models.CharField(max_length=50)
     age = models.IntegerField()
     location = models.ManyToManyField(Locations)
 
@@ -48,7 +48,7 @@ class Users(models.Model):
 
 
 class Ads(models.Model):
-    name = models.TextField()
+    name = models.CharField(max_length=255)
     author = models.ForeignKey('Users', on_delete=models.CASCADE)
     price = models.IntegerField()
     description = models.TextField()
