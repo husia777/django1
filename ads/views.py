@@ -81,15 +81,23 @@ class AdsCreateView(CreateView):
 
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
+        try:
+            category = Category.objects.get(pk=data['category_id'])
+        except  Category.DoesNotExist as error:
+            return JsonResponse({"ERROR":f"{error}"})
+        try:
+            author = Users.objects.get(first_name=data['author'])
+        except  Category.DoesNotExist as error:
+            return JsonResponse({"ERROR": f"{error}"})
 
         ad = Ads.objects.create(
             name=data['name'],
-            author=data['author'],
+            author=author,
             price=data['price'],
             description=data['description'],
             is_published=data['is_published'],
             logo=data['logo'],
-            category=['category']
+            category=category
         )
 
         return JsonResponse({'res': 'ok'}, status=200)
@@ -98,7 +106,7 @@ class AdsCreateView(CreateView):
 class AdsUpdateView(UpdateView):
     model = Ads
     fields = ['name', 'price', 'description',  'is_published']
-    def post(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         super().post(request, *args, **kwargs)
         data = json.loads(request.body)
         self.object.name = data['name']
@@ -200,7 +208,7 @@ class CategoryCreateView(CreateView):
 class CategoryUpdateView(UpdateView):
     model = Category
     fields = ['name']
-    def post(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         super().post(request, *args, **kwargs)
         data = json.loads(request.body)
         self.object.name = data['name']
@@ -281,7 +289,6 @@ class UsersCreateView(CreateView):
 
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
-
         ad = Users.objects.create(
             first_name=data['first_name'],
             last_name=data['last_name'],
@@ -301,7 +308,7 @@ class UsersCreateView(CreateView):
 class UsersUpdateView(UpdateView):
     model = Users
     fields = ['first_name', 'last_name', 'username', 'password', 'role', 'age', 'location']
-    def post(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         user_data = json.loads(request.body)
 
         super().post(request, *args, **kwargs)
@@ -312,17 +319,19 @@ class UsersUpdateView(UpdateView):
         self.object.password = data['password']
         self.object.role = data['role']
         self.object.age = data['age']
-        self.object.location = self.object.name.get_or_create(data['location']),
+        for location in data['location']:
+            user_loc, created = Locations.objects.get_or_create(
+                name=location)
+            self.object.location.add(user_loc)
         self.object.save()
-
         return JsonResponse({
-            'first_name': self.object.name,
-            'last_name': self.object.author,
-            'username': self.object.price,
-            'password': self.object.description,
-            'role': self.object.address,
-            'age': self.object.is_published,
-            'location': self.object.location,
+            'first_name': self.object.first_name,
+            'last_name': self.object.last_name,
+            'username': self.object.username,
+            'password': self.object.password,
+            'role': self.object.role,
+            'age': self.object.age,
+            'location': list(map(str, self.object.location.all())),
 
         }, status=200)
 
