@@ -110,23 +110,23 @@ class AdsUpdateView(UpdateView):
         super().post(request, *args, **kwargs)
         data = json.loads(request.body)
         self.object.name = data['name']
-        self.object.author = data['author']
+        self.object.author_id = data['author_id']
         self.object.price = data['price']
         self.object.description = data['description']
         self.object.is_published = data['is_published']
-        self.object.logo = data['logo'],
-        self.object.category = data['category']
+        self.object.logo = data['logo']
+        self.object.category_id = data['category_id']
 
         self.object.save()
 
         return JsonResponse({
             'name': self.object.name,
-            'author': self.object.author,
+            'author_id': self.object.author_id,
             'price': self.object.price,
             'description': self.object.description,
             'is_published': self.object.is_published,
-            'logo': self.object.logo,
-            'category': self.object.category
+            'logo': self.object.logo.url,
+            'category': self.object.category_id
             }, status=200)
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -150,12 +150,12 @@ class AdsAddImage(UpdateView):
         self.object.save()
         return JsonResponse({
             'name': self.object.name,
-            'author': self.object.author,
+            'author': self.object.author.first_name,
             'price': self.object.price,
             'description': self.object.description,
             'is_published': self.object.is_published,
             'logo': self.object.logo.url if self.object.logo else None,
-            'category': self.object.category
+            'category': self.object.category.name
             })
 
 
@@ -343,6 +343,9 @@ class UsersDeleteView(DeleteView):
     def delete(self, request, *args, **kwargs):
         super().delete(request, *args, **kwargs)
         return JsonResponse({'status':'ok'}, status=200)
+
+
+
 
 
 
